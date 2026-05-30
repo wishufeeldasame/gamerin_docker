@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+!.env.wsl.example
+
+data/
+backups/
+logs/
+
+.DS_Store

@@ -1,0 +1,10 @@
+# Example for Caddy installed directly on the host.
+# Replace domains and make sure DNS points to this server.
+
+gamerin.example.com {
+    reverse_proxy 127.0.0.1:3000
+}
+
+api.gamerin.example.com {
+    reverse_proxy 127.0.0.1:8080
+}
