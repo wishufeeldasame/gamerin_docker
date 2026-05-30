@@ -2,13 +2,15 @@
 
 ## 기준 경로
 
-개발 서버는 홈 디렉토리 아래 `capstone` 폴더를 기준으로 사용합니다. 실제 절대경로는 `/home/사용자/capstone`이고, 명령어에서는 `~/capstone`으로 표기합니다.
+개발 서버는 홈 디렉토리 아래 `capstone` 폴더를 기준으로 사용
+실제 절대경로는 `/home/사용자/capstone`이고, 명령어에서는 `~/capstone`으로 표기합니다.
 
 ```text
 ~/capstone
 ├── backend
 ├── frontend
 ├── docker
+│   └── nginx
 ├── data
 │   ├── postgres
 │   ├── tmp
@@ -16,13 +18,13 @@
 └── backups
 ```
 
-운영 명령은 기본적으로 Docker repo에서 실행합니다.
+운영 명령은 기본적으로 Docker repo에서 실행
 
 ```bash
 cd ~/capstone/docker
 ```
 
-스크립트도 기본적으로 `$HOME/capstone`을 사용합니다. 다른 경로를 써야 하는 경우에만 `GAMERIN_BASE_DIR`을 지정합니다.
+스크립트도 기본적으로 `$HOME/capstone`을 사용.
 
 ```bash
 GAMERIN_BASE_DIR=/path/to/capstone ./scripts/deploy.sh
@@ -30,8 +32,9 @@ GAMERIN_BASE_DIR=/path/to/capstone ./scripts/deploy.sh
 
 ## 구성 파일
 
-- `docker-compose.yml`: 백엔드, 프론트엔드, Postgres 실행 정의
-- `.env`: 서버에서만 관리하는 실제 환경변수 파일
+- `docker-compose.yml`: docker compose 정의
+- `nginx/default.conf`: 프론트/백엔드 reverse proxy 설정
+- `.env`: 환경변수 파일
 - `.env.example`: `.env` 작성 기준 예시
 - `Caddyfile.example`: Caddy reverse proxy 예시
 - `scripts/deploy.sh`: 이미지 빌드 후 전체 서비스 기동
@@ -39,8 +42,9 @@ GAMERIN_BASE_DIR=/path/to/capstone ./scripts/deploy.sh
 - `scripts/down.sh`: 전체 서비스 중지
 - `scripts/backup-postgres.sh`: DB 백업
 - `scripts/restore-postgres.sh`: DB 복원
+- `scripts/reset-db.sh`: 오류 대응용 DB 초기화
 
-`.env`는 GitHub에 올리지 않습니다.
+`.env`는 GitHub에 올리지 않는다.
 
 ## 현재 상태 확인
 
@@ -52,6 +56,7 @@ docker compose ps
 컨테이너 로그를 짧게 확인하려면:
 
 ```bash
+docker compose logs --tail=100 nginx
 docker compose logs --tail=100 backend
 docker compose logs --tail=100 frontend
 docker compose logs --tail=100 postgres
@@ -60,15 +65,16 @@ docker compose logs --tail=100 postgres
 실시간 로그를 보려면:
 
 ```bash
+./scripts/logs.sh nginx
 ./scripts/logs.sh backend
 ./scripts/logs.sh frontend
 ```
 
-종료는 `Ctrl + C`입니다. 로그 보기만 종료되고 서버는 내려가지 않습니다.
+종료는 `Ctrl + C`
 
 ## 전체 배포
 
-백엔드, 프론트엔드, Docker 설정을 모두 최신으로 가져온 뒤 배포합니다.
+백엔드, 프론트엔드, Docker 설정을 모두 최신으로 가져온 뒤 배포
 
 ```bash
 cd ~/capstone/backend
@@ -82,13 +88,22 @@ git pull
 ./scripts/deploy.sh
 ```
 
-`deploy.sh`는 아래 작업을 수행합니다.
+`deploy.sh`는 아래 작업을 수행함
 
 ```bash
 docker compose --env-file .env build backend frontend
 docker compose --env-file .env up -d
 docker compose --env-file .env ps
 ```
+
+배포 후 접속 주소는 nginx 기준으로 하나만 사용합니다.
+
+```text
+집 내부: http://서버_내부_IP
+외부 팀원: http://서버_공인_IP
+```
+
+프론트는 `/api/...` 상대경로로 백엔드를 호출하고, nginx가 `/api` 요청을 백엔드로 전달합니다.
 
 ## 백엔드만 배포
 
@@ -104,7 +119,7 @@ docker compose up -d backend
 docker compose logs --tail=100 -f backend
 ```
 
-백엔드는 `SPRING_PROFILES_ACTIVE=prod`로 실행됩니다. 서버 배포에서는 `application-local.yaml`을 사용하지 않습니다.
+백엔드는 `SPRING_PROFILES_ACTIVE=prod`로 실행됨. 서버 배포에서는 `application-local.yaml`을 사용하지 않음.
 
 ## 프론트엔드만 배포
 
@@ -120,7 +135,7 @@ docker compose up -d frontend
 docker compose logs --tail=100 -f frontend
 ```
 
-`NEXT_PUBLIC_API_BASE_URL`은 프론트 빌드 시점에 들어갑니다. `.env`에서 이 값을 바꿨다면 반드시 `docker compose build frontend`를 다시 실행해야 합니다.
+`NEXT_PUBLIC_API_BASE_URL` 값을 `.env`에서 바꿨다면 반드시 `docker compose build frontend`를 다시 실행해야 함.
 
 ## Docker 설정만 반영
 
@@ -133,7 +148,7 @@ docker compose up -d
 docker compose ps
 ```
 
-이미지 빌드 설정이 바뀐 경우에는 다시 빌드합니다.
+이미지 빌드 설정이 바뀐 경우에는 다시 빌드함
 
 ```bash
 docker compose build backend frontend
@@ -142,7 +157,7 @@ docker compose up -d
 
 ## 환경변수 수정
 
-실제 서버 값은 `~/capstone/docker/.env`에서 관리합니다.
+`~/capstone/docker/.env`에서 관리
 
 ```bash
 cd ~/capstone/docker
@@ -162,17 +177,20 @@ docker compose build frontend
 docker compose up -d frontend
 ```
 
-주요 DB 변수명은 `DB_*`로 통일되어 있습니다.
+nginx 구조에서는 일반적으로 아래처럼 둡니다.
 
 ```dotenv
-DB_HOST=postgres
-DB_PORT=5432
-DB_NAME=gamerin
-DB_USERNAME=gamerin
-DB_PASSWORD=change-me
+NGINX_BIND=0.0.0.0
+NGINX_PORT=80
+NEXT_PUBLIC_API_BASE_URL=
+CORS_ALLOWED_ORIGINS=http://공인IP,http://내부IP
+FRONTEND_BASE_URL=http://공인IP
+REFRESH_COOKIE_SECURE=false
 ```
 
-Compose는 이 값을 Postgres 컨테이너에는 `POSTGRES_*`로 변환해서 주입하고, 백엔드에는 `DB_*` 그대로 주입합니다.
+`NEXT_PUBLIC_API_BASE_URL`은 빈 값으로 둡니다. 그래야 프론트가 `http://공인IP:8080/api/...` 같은 절대주소가 아니라 `/api/...` 상대경로로 호출합니다.
+
+공유기 포트포워딩은 외부 80번을 서버 노트북 내부 IP의 80번으로 연결합니다.
 
 ## 서버 재시작
 
@@ -186,6 +204,7 @@ docker compose restart
 특정 서비스만 재시작:
 
 ```bash
+docker compose restart nginx
 docker compose restart backend
 docker compose restart frontend
 docker compose restart postgres
@@ -193,7 +212,7 @@ docker compose restart postgres
 
 ## 서버 내리기
 
-전체 컨테이너를 내립니다. DB 데이터와 업로드 파일은 유지됩니다.
+전체 컨테이너를 내림. DB 데이터와 업로드 파일은 유지됨.
 
 ```bash
 cd ~/capstone/docker
@@ -206,7 +225,7 @@ cd ~/capstone/docker
 docker compose up -d
 ```
 
-운영 서버에서 `docker compose down -v`는 사용하지 않습니다. DB volume 삭제로 이어질 수 있습니다.
+운영 서버에서 `docker compose down -v`는 DB volume 삭제로 이어질 수 있어서 사용x
 
 ## DB 백업과 복원
 
@@ -217,7 +236,7 @@ cd ~/capstone/docker
 ./scripts/backup-postgres.sh
 ```
 
-백업 파일은 `~/capstone/backups/postgres-YYYYMMDD-HHMMSS.sql` 형식으로 생성됩니다.
+백업 파일은 `~/capstone/backups/postgres-YYYYMMDD-HHMMSS.sql` 형식으로 생성됨
 
 복원:
 
@@ -226,7 +245,17 @@ cd ~/capstone/docker
 ./scripts/restore-postgres.sh ~/capstone/backups/postgres-YYYYMMDD-HHMMSS.sql
 ```
 
-복원은 현재 DB에 데이터를 다시 쓰는 작업입니다. 운영 데이터에 실행하기 전에는 반드시 최근 백업을 하나 더 만들어둡니다.
+복원은 현재 DB에 데이터를 다시 쓰는 작업. 운영 데이터에 실행하기 전에는 반드시 최근 백업을 하나 더 만들어둠.
+
+## 개발 DB 초기화
+
+Flyway 마이그레이션 충돌이나 개발 DB 꼬임 때문에 DB 파일만 지우고 싶을 때 사용. 이 스크립트는 Postgres 데이터 폴더만 삭제함
+
+```bash
+cd ~/capstone/docker
+./scripts/reset-db.sh
+```
+
 
 ## 데이터 경로
 
@@ -235,11 +264,11 @@ cd ~/capstone/docker
 - 백엔드 임시 파일: `~/capstone/data/tmp`
 - DB 백업 파일: `~/capstone/backups`
 
-피드 이미지나 업로드 파일은 `~/capstone/data/uploads`에 남습니다. 컨테이너를 다시 만들거나 이미지를 다시 빌드해도 이 폴더는 유지됩니다.
+피드 이미지나 업로드 파일은 `~/capstone/data/uploads`에 남음. 컨테이너를 다시 만들거나 이미지를 다시 빌드해도 이 폴더는 유지됨
 
 ## 권한 문제
 
-백엔드 컨테이너는 UID `10001` 사용자로 실행됩니다. 업로드나 임시 파일 생성에서 권한 오류가 나면 서버에서 아래를 실행합니다.
+백엔드 컨테이너는 UID `10001` 사용자로 실행됨. 업로드나 임시 파일 생성에서 권한 오류가 나면 서버에서 아래를 실행한다.
 
 ```bash
 sudo chown -R 10001:10001 ~/capstone/data/uploads ~/capstone/data/tmp
@@ -256,33 +285,22 @@ docker compose ps
 docker compose logs --tail=200 backend
 ```
 
-DB 연결 오류가 보이면 `.env`의 `DB_*` 값과 Postgres 상태를 확인합니다.
+DB 연결 오류가 보이면 `.env`의 `DB_*` 값과 Postgres 상태를 확인한다.
 
 ```bash
 docker compose ps postgres
 docker compose logs --tail=100 postgres
 ```
 
-프론트에서 API 호출이 이상하면 `.env`의 `NEXT_PUBLIC_API_BASE_URL`, 백엔드의 `CORS_ALLOWED_ORIGINS`, `FRONTEND_BASE_URL`을 같이 확인합니다. `NEXT_PUBLIC_API_BASE_URL`을 바꾼 뒤에는 프론트를 다시 빌드해야 합니다.
+프론트에서 API 호출이 이상하면 `.env`의 `NEXT_PUBLIC_API_BASE_URL`, 백엔드의 `CORS_ALLOWED_ORIGINS`, `FRONTEND_BASE_URL`을 같이 확인한다. `NEXT_PUBLIC_API_BASE_URL`을 바꾼 뒤에는 프론트를 다시 빌드해야 함.
 
 ```bash
 docker compose build frontend
 docker compose up -d frontend
 ```
 
-## GitHub에 올릴 때
+nginx 경유 구조에서는 `NEXT_PUBLIC_API_BASE_URL`이 빈 값인지 먼저 확인한다.
 
-이 repo에는 운영 비밀값을 넣지 않습니다.
+## Caddy
 
-```bash
-git status
-git add .
-git commit -m "Update Docker operations guide"
-git push
-```
-
-커밋 전에 `.env`가 포함되지 않았는지 확인합니다.
-
-```bash
-git status --short
-```
+현재 개발 서버 구성에서는 Caddy를 사용하지 않고 nginx 컨테이너를 사용한다. 도메인과 HTTPS를 붙일 때만 Caddy 또는 호스트 nginx 같은 별도 reverse proxy 구성을 검토한다.

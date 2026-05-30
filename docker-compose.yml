@@ -1,6 +1,19 @@
 name: gamerin
 
 services:
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "${NGINX_BIND:-0.0.0.0}:${NGINX_PORT:-80}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - gamerin
+
   postgres:
     image: postgres:16
     restart: unless-stopped
@@ -63,8 +76,6 @@ services:
       OPENAI_MODERATION_FFMPEG_PATH: ffmpeg
       PUBG_API_KEY: ${PUBG_API_KEY:-}
       TMPDIR: /app/tmp
-    ports:
-      - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8080}:8080"
     volumes:
       - ../data/uploads:/app/uploads
       - ../data/tmp:/app/tmp
@@ -83,8 +94,6 @@ services:
       - backend
     environment:
       NODE_ENV: production
-    ports:
-      - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000"
     networks:
       - gamerin
 
