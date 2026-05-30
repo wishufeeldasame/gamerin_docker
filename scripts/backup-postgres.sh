@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_DIR="${GAMERIN_BASE_DIR:-/srv/gamerin}"
+BASE_DIR="${GAMERIN_BASE_DIR:-${HOME:?HOME is not set}/capstone}"
 DOCKER_DIR="$BASE_DIR/docker"
 BACKUP_DIR="$BASE_DIR/backups"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"

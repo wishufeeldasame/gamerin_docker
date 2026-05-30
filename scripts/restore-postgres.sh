@@ -6,7 +6,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-BASE_DIR="${GAMERIN_BASE_DIR:-/srv/gamerin}"
+BASE_DIR="${GAMERIN_BASE_DIR:-${HOME:?HOME is not set}/capstone}"
 BACKUP_FILE="$1"
 
 cd "$BASE_DIR/docker"
