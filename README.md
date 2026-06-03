@@ -1,9 +1,6 @@
-# Gamerin Docker 서버 사용 가이드
+# Gamerin Docker 
 
 ## 기준 경로
-
-개발 서버는 홈 디렉토리 아래 `capstone` 폴더를 기준으로 사용
-실제 절대경로는 `/home/사용자/capstone`이고, 명령어에서는 `~/capstone`으로 표기합니다.
 
 ```text
 ~/capstone
