@@ -8,6 +8,7 @@
 ├── frontend
 ├── docker
 │   └── nginx
+│   └── scripts
 ├── data
 │   ├── postgres
 │   ├── tmp
