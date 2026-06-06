@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_common.sh
+. "$SCRIPT_DIR/_common.sh"
+
+require_macos
+require_docker_daemon
+
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
   echo "Usage: $0 /path/to/postgres-backup.sql [--yes]" >&2
   exit 1
 fi
 
-BASE_DIR="${GAMERIN_BASE_DIR:-${HOME:?HOME is not set}/capstone}"
 BACKUP_FILE="$1"
 ASSUME_YES="${2:-}"
 
@@ -41,7 +47,7 @@ if [ "$ASSUME_YES" != "--yes" ]; then
   fi
 fi
 
-cd "$BASE_DIR/docker"
+cd_docker_dir
 
 docker compose exec -T postgres sh -c 'psql -v ON_ERROR_STOP=1 --single-transaction -U "$POSTGRES_USER" "$POSTGRES_DB"' < "$BACKUP_FILE"
 

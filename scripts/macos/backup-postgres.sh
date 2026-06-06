@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_DIR="${GAMERIN_BASE_DIR:-${HOME:?HOME is not set}/capstone}"
-DOCKER_DIR="$BASE_DIR/docker"
-BACKUP_DIR="$BASE_DIR/backups"
-TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
-BACKUP_FILE="$BACKUP_DIR/postgres-$TIMESTAMP.sql"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=_common.sh
+. "$SCRIPT_DIR/_common.sh"
 
-mkdir -p "$BACKUP_DIR"
-TMP_BACKUP_FILE="$(mktemp "$BACKUP_DIR/.postgres-$TIMESTAMP.XXXXXX.sql")"
+require_macos
+require_docker_daemon
+
+TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
+BACKUP_FILE="$GAMERIN_BACKUP_DIR/postgres-$TIMESTAMP.sql"
+
+mkdir -p "$GAMERIN_BACKUP_DIR"
+TMP_BACKUP_FILE="$(mktemp "$GAMERIN_BACKUP_DIR/.postgres-$TIMESTAMP.XXXXXX.sql")"
 
 cleanup_backup_tmp() {
   if [ -f "$TMP_BACKUP_FILE" ]; then
@@ -18,7 +22,7 @@ cleanup_backup_tmp() {
 
 trap cleanup_backup_tmp EXIT
 
-cd "$DOCKER_DIR"
+cd_docker_dir
 
 docker compose exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' > "$TMP_BACKUP_FILE"
 mv "$TMP_BACKUP_FILE" "$BACKUP_FILE"
