@@ -13,5 +13,6 @@ fi
 
 docker compose --env-file .env build backend frontend
 docker compose --env-file .env up -d
+docker compose --env-file .env exec -T nginx nginx -t
 docker compose --env-file .env exec -T nginx nginx -s reload
 docker compose --env-file .env ps
