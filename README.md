@@ -103,6 +103,24 @@ docker compose --env-file .env ps
 
 프론트는 `/api/...` 상대경로로 백엔드를 호출하고, nginx가 `/api` 요청을 백엔드로 전달합니다.
 
+프로필 이미지 업로드 경로는 일반 API보다 작은 요청 제한을 적용합니다.
+
+```text
+/api/v1/users/me/profile-images
+```
+
+- `client_max_body_size 6m`
+- IP 기준 `30r/m`, burst `10`
+
+게시물 생성 경로는 백엔드의 영상 업로드 정책과 맞춰 더 큰 요청 제한을 적용합니다.
+
+```text
+/api/v1/posts
+```
+
+- `client_max_body_size 530m`
+- IP 기준 `10r/m`, burst `5`
+
 ## 백엔드만 배포
 
 백엔드 코드만 바뀐 경우:
