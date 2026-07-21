@@ -320,3 +320,15 @@ nginx 경유 구조에서는 `NEXT_PUBLIC_API_BASE_URL`이 빈 값인지 먼저 
 ## Caddy
 
 현재 개발 서버 구성에서는 Caddy를 사용하지 않고 nginx 컨테이너를 사용한다. 도메인과 HTTPS를 붙일 때만 Caddy 또는 호스트 nginx 같은 별도 reverse proxy 구성을 검토한다.
+
+## 수정 일지
+
+- **26/07/21** 서장호
+
+  > `.env.example`에 `R6DATA_API_KEY`, `R6DATA_API_BASE_URL`, 연결·응답 읽기 timeout 예시를 추가
+  > R6Data 기본 URL은 `https://api.r6data.com`, 연결 timeout은 `3s`, 응답 읽기 timeout은 `10s`로 구성
+  > `docker-compose.yml`에서 R6Data 환경변수를 백엔드 컨테이너에 전달하도록 추가
+  > R6Data API 키는 프론트엔드에 노출하지 않고 백엔드 런타임에만 주입하도록 유지
+  > 검증: `docker compose --env-file .env.example config --quiet`, `git diff --check` 통과
+
+  > 요약 : Docker 배포 환경에서 R6Data API 설정을 백엔드에 안전하게 주입할 수 있도록 예시와 Compose 전달 구성을 추가

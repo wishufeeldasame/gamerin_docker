@@ -78,6 +78,10 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODERATION_FFMPEG_PATH: ffmpeg
       PUBG_API_KEY: ${PUBG_API_KEY:-}
+      R6DATA_API_KEY: ${R6DATA_API_KEY}
+      R6DATA_API_BASE_URL: ${R6DATA_API_BASE_URL:-https://api.r6data.com}
+      R6DATA_API_CONNECT_TIMEOUT: ${R6DATA_API_CONNECT_TIMEOUT:-3s}
+      R6DATA_API_READ_TIMEOUT: ${R6DATA_API_READ_TIMEOUT:-10s}
       TMPDIR: /app/tmp
     volumes:
       - ../data/uploads:/app/uploads
