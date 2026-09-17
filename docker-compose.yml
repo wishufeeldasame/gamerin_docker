@@ -21,6 +21,10 @@ services:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # 로컬 개발 중 MCP 등으로 DB에 직접 접속하기 위한 포트 노출.
+    # 실제 서버 배포 시에는 반드시 아래 ports 항목을 주석 처리할 것 (DB를 외부에 노출하지 않음).
+    ports:
+      - "127.0.0.1:${DB_HOST_PORT:-5432}:5432"
     volumes:
       - ../data/postgres:/var/lib/postgresql/data
     healthcheck:
