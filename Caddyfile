@@ -1,0 +1,16 @@
+# gamerin.live HTTPS 입구. docker-compose.prod.yml에서만 사용한다(로컬 개발은 Caddy 없이 nginx:80 직접).
+# TLS 종단 + 인증서 자동 발급/갱신 + HTTP→HTTPS 리다이렉트는 Caddy 기본 동작.
+# 인증서는 /data(호스트 ../data/caddy)에 저장되므로 지우지 않는다(발급 한도 보호).
+
+{$SITE_ADDRESS:gamerin.live} {
+	# HSTS 단계적 상향: 300 → 86400 → 31536000 (.env의 HSTS_MAX_AGE로 조정).
+	# includeSubDomains는 모든 서브도메인이 HTTPS일 때만, preload는 붙이지 않는다.
+	# defer: 업스트림(Next)이 같은 헤더를 내도 이 값이 최종으로 남게 한다.
+	header {
+		Strict-Transport-Security "max-age={$HSTS_MAX_AGE:300}"
+		defer
+	}
+
+	# SSE(text/event-stream)는 Caddy가 스트리밍 응답으로 보고 즉시 flush한다.
+	reverse_proxy nginx:80
+}

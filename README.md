@@ -31,6 +31,8 @@ GAMERIN_BASE_DIR=/path/to/capstone ./scripts/deploy.sh
 ## 구성 파일
 
 - `docker-compose.yml`: docker compose 정의
+- `docker-compose.prod.yml`: 도메인(HTTPS) 배포 전용 override. Caddy 추가, nginx 호스트 포트 비공개
+- `Caddyfile`: `gamerin.live` HTTPS 입구(Caddy) 설정
 - `nginx/default.conf`: 프론트/백엔드 reverse proxy 설정
 - `.env`: 환경변수 파일
 - `.env.example`: `.env` 작성 기준 예시
@@ -319,7 +321,22 @@ nginx 경유 구조에서는 `NEXT_PUBLIC_API_BASE_URL`이 빈 값인지 먼저 
 
 ## Caddy
 
-현재 개발 서버 구성에서는 Caddy를 사용하지 않고 nginx 컨테이너를 사용한다. 도메인과 HTTPS를 붙일 때만 Caddy 또는 호스트 nginx 같은 별도 reverse proxy 구성을 검토한다.
+로컬 개발은 Caddy 없이 `docker-compose.yml`만 사용한다(`http://localhost`, nginx 80 공개).
+
+도메인 배포(`gamerin.live`)는 `docker-compose.prod.yml`을 겹쳐 쓴다. Caddy가 TLS 종단·인증서 자동 발급/갱신·HTTP→HTTPS 리다이렉트를 맡고 `nginx:80`으로 넘긴다. Caddy만 80/443을 공개하고 nginx 호스트 포트는 닫힌다.
+
+```bash
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
+
+- DNS A 레코드 `gamerin.live` → 서버 공인 IP, 서버 방화벽에서 80/443(TCP)·443(UDP) 개방
+- `SITE_ADDRESS`(기본 `gamerin.live`), `HSTS_MAX_AGE`(기본 `300`)로 조정한다. HSTS는 `300` → `86400` → `31536000` 순서로 올린다.
+- 인증서는 `../data/caddy`에 저장된다. 지우면 재발급하므로 발급 한도에 걸릴 수 있다.
+- nginx는 Caddy 고정 IP(`10.250.0.2`)에서 온 요청만 `X-Forwarded-Proto`·`X-Forwarded-For`를 신뢰한다. 이 IP를 바꾸면 `nginx/default.conf`도 같이 바꾼다.
+- 서브넷 고정 때문에 기존 `gamerin` 네트워크가 있으면 먼저 `docker compose down`(볼륨 유지) 후 올린다.
+- 서버 `.env`: `FRONTEND_BASE_URL=https://gamerin.live`, `CORS_ALLOWED_ORIGINS`에 `https://gamerin.live`, `REFRESH_COOKIE_SECURE=true`, `STREAM_TOKEN_COOKIE_SECURE=true`, `NEXT_PUBLIC_API_BASE_URL` 빈 값
+- Google OAuth redirect URI: `https://gamerin.live/login/oauth2/code/google`
+- `scripts/deploy.sh`는 아직 prod override를 쓰지 않는다.
 
 ## 수정 일지
 
