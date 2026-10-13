@@ -87,6 +87,8 @@ services:
       R6DATA_API_BASE_URL: ${R6DATA_API_BASE_URL:-https://api.r6data.com}
       R6DATA_API_CONNECT_TIMEOUT: ${R6DATA_API_CONNECT_TIMEOUT:-3s}
       R6DATA_API_READ_TIMEOUT: ${R6DATA_API_READ_TIMEOUT:-10s}
+      KAKAOPAY_SECRET_KEY: ${KAKAOPAY_SECRET_KEY:-}
+      KAKAOPAY_CID: ${KAKAOPAY_CID:-}
       TMPDIR: /app/tmp
     volumes:
       - ../data/uploads:/app/uploads
