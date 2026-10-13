@@ -93,6 +93,7 @@ services:
       R6DATA_API_READ_TIMEOUT: ${R6DATA_API_READ_TIMEOUT:-10s}
       KAKAOPAY_SECRET_KEY: ${KAKAOPAY_SECRET_KEY:-}
       KAKAOPAY_CID: ${KAKAOPAY_CID:-}
+      KAKAOPAY_CANCEL_ENABLED: ${KAKAOPAY_CANCEL_ENABLED:-false}
       TMPDIR: /app/tmp
     volumes:
       - ../data/uploads:/app/uploads
