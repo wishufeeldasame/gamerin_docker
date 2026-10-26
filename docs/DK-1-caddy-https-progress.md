@@ -10,7 +10,7 @@
 ## 변경 내용
 | 파일 | 내용 |
 |---|---|
-| `Caddyfile` (신규) | `{$SITE_ADDRESS:gamerin.live}` → `nginx:80`. HSTS `max-age={$HSTS_MAX_AGE:300}` + `defer`. includeSubDomains/preload 없음. SSE는 Caddy가 스트리밍 응답으로 보고 즉시 flush |
+| `Caddyfile` (신규) | `{$SITE_ADDRESS:gamerin.live}` → `nginx:80`. HSTS `max-age={$HSTS_MAX_AGE:300}` + `defer`. includeSubDomains/preload 없음. SSE는 Caddy가 스트리밍 응답으로 보고 즉시 flush. 전역 로그 filter로 `pg_token` 쿼리·`Referer` 제거 |
 | `docker-compose.prod.yml` (신규) | 배포 전용 override. caddy(80/443/443udp, 인증서 `../data/caddy:/data`, 고정 IP `10.250.0.2`), nginx `ports: !reset []`, 서브넷 `10.250.0.0/24` + 동적 할당 `ip_range 10.250.0.128/25` |
 | `nginx/default.conf` | `geo`로 `10.250.0.2`만 신뢰. Proto는 Caddy가 `https`라고 보낸 경우만 `https`(Port 443), 그 외는 nginx 자신의 값. `set_real_ip_from`+`real_ip_header X-Forwarded-For`로 클라이언트 IP 복원. `X-Forwarded-For`/`X-Real-IP`는 `$remote_addr`로 덮어쓰고 `Forwarded` 제거. 헤더 블록을 `location /`, `location = /payments/result`에도 반복(상속 규칙) |
 | `.env.example` | `SITE_ADDRESS`, `HSTS_MAX_AGE` 추가. SSE 쿠키는 main의 `STREAM_TOKEN_COOKIE_SECURE`(compose 기본 `true`)를 그대로 쓴다 |
@@ -37,6 +37,7 @@
   - 업로드(Caddy 경유): profile-images 5MB `200`, 7MB `413`
   - post_upload rate limit: 클라이언트 A 8회 연속 → 6회 `200` 후 `503`, 직후 클라이언트 B `200`(IP별 동작)
   - SSE(Caddy 경유): 1.5초 간격 이벤트가 생성 즉시 수신
+  - Caddy 오류 로그: upstream 실패 시 `/payments/result?pg_token=…`·`Referer`의 토큰이 수정 전에는 기록, 수정 후 0건(다른 쿼리는 유지)
 - 시험 후 임시 컨테이너·네트워크 정리
 
 ## 남은 작업 (배포 당일, 이슈 #3)
