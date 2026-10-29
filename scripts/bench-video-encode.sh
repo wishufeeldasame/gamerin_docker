@@ -52,8 +52,12 @@ if [ ${#INPUTS[@]} -eq 0 ]; then
   INPUTS=("$WORK_DIR/landscape.mp4" "$WORK_DIR/portrait.mp4")
 else
   for i in "${!INPUTS[@]}"; do
-    cp "${INPUTS[$i]}" "$WORK_DIR/input-$i.${INPUTS[$i]##*.}"
-    INPUTS[$i]="$WORK_DIR/input-$i.${INPUTS[$i]##*.}"
+    # 확장자는 파일 이름에서만 구한다(없으면 붙이지 않음). FFmpeg는 내용으로 형식을 판별한다.
+    name="$(basename "${INPUTS[$i]}")"
+    ext=""
+    case "$name" in *.*) ext=".${name##*.}" ;; esac
+    cp "${INPUTS[$i]}" "$WORK_DIR/input-$i$ext"
+    INPUTS[$i]="$WORK_DIR/input-$i$ext"
   done
 fi
 
