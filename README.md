@@ -200,6 +200,7 @@ docker compose up -d frontend
 운영 서버:
 
 ```dotenv
+COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
 NEXT_PUBLIC_API_BASE_URL=
 CORS_ALLOWED_ORIGINS=https://gamerin.live
 FRONTEND_BASE_URL=https://gamerin.live
@@ -210,6 +211,7 @@ STREAM_TOKEN_COOKIE_SECURE=true
 로컬 `http://localhost` 개발:
 
 ```dotenv
+COMPOSE_FILE=docker-compose.yml
 NGINX_BIND=127.0.0.1
 NGINX_PORT=80
 NEXT_PUBLIC_API_BASE_URL=
@@ -339,9 +341,13 @@ nginx 경유 구조에서는 `NEXT_PUBLIC_API_BASE_URL`이 빈 값인지 먼저 
 
 도메인 배포(`gamerin.live`)는 `docker-compose.prod.yml`을 겹쳐 쓴다. Caddy가 TLS 종단·인증서 자동 발급/갱신·HTTP→HTTPS 리다이렉트를 맡고 `nginx:80`으로 넘긴다. Caddy만 80/443을 공개하고 nginx 호스트 포트는 닫힌다.
 
+서버 `.env`의 `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`이 두 파일을 겹친다. `docker compose` 명령과 `scripts/deploy.sh`, `down.sh`, `logs.sh`에 `-f`를 붙이지 않아도 된다.
+
 ```bash
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose --env-file .env up -d
 ```
+
+`docker compose --env-file .env config --services` 결과에 `caddy`가 있으면 적용된 것이다.
 
 - DNS A 레코드 `gamerin.live` → 서버 공인 IP, 서버 방화벽에서 80/443(TCP)·443(UDP) 개방
 - `SITE_ADDRESS`(기본 `gamerin.live`), `HSTS_MAX_AGE`(기본 `300`)로 조정한다. HSTS는 `300` → `86400` → `31536000` 순서로 올린다.
@@ -350,7 +356,7 @@ docker compose --env-file .env -f docker-compose.yml -f docker-compose.prod.yml 
 - 서브넷 고정 때문에 기존 `gamerin` 네트워크가 있으면 먼저 `docker compose down`(볼륨 유지) 후 올린다.
 - 서버 `.env`: `FRONTEND_BASE_URL=https://gamerin.live`, `CORS_ALLOWED_ORIGINS`에 `https://gamerin.live`, `REFRESH_COOKIE_SECURE=true`, `STREAM_TOKEN_COOKIE_SECURE=true`, `NEXT_PUBLIC_API_BASE_URL` 빈 값
 - Google OAuth redirect URI: `https://gamerin.live/login/oauth2/code/google`
-- `scripts/deploy.sh`는 아직 prod override를 쓰지 않는다.
+- `scripts/deploy.sh`는 `COMPOSE_FILE`로 prod override를 쓴다. 이 값이 없으면 Caddy 없이 뜨므로 HTTPS로 접속할 수 없다.
 
 ## 수정 일지
 
