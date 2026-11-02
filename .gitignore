@@ -2,7 +2,6 @@
 .env.*
 !.env.example
 !.env.wsl.example
-Caddyfile
 
 data/
 backups/
