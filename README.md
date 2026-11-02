@@ -96,11 +96,11 @@ docker compose --env-file .env up -d
 docker compose --env-file .env ps
 ```
 
-배포 후 접속 주소는 nginx 기준으로 하나만 사용합니다.
+접속 주소는 하나만 사용합니다.
 
 ```text
-집 내부: http://서버_내부_IP
-외부 팀원: http://서버_공인_IP
+운영: https://gamerin.live   (Caddy → nginx, docker-compose.prod.yml)
+로컬: http://localhost       (nginx, docker-compose.yml)
 ```
 
 프론트는 `/api/...` 상대경로로 백엔드를 호출하고, nginx가 `/api` 요청을 백엔드로 전달합니다.
@@ -195,20 +195,34 @@ docker compose build frontend
 docker compose up -d frontend
 ```
 
-nginx 구조에서는 일반적으로 아래처럼 둡니다.
+`.env.example`은 운영 서버(`https://gamerin.live`) 기준 값이고, 로컬 개발 값은 `# local:` 주석에 있다.
+
+운영 서버:
 
 ```dotenv
-NGINX_BIND=0.0.0.0
-NGINX_PORT=80
 NEXT_PUBLIC_API_BASE_URL=
-CORS_ALLOWED_ORIGINS=http://공인IP,http://내부IP
-FRONTEND_BASE_URL=http://공인IP
-REFRESH_COOKIE_SECURE=false
+CORS_ALLOWED_ORIGINS=https://gamerin.live
+FRONTEND_BASE_URL=https://gamerin.live
+REFRESH_COOKIE_SECURE=true
+STREAM_TOKEN_COOKIE_SECURE=true
 ```
 
-`NEXT_PUBLIC_API_BASE_URL`은 빈 값으로 둡니다. 그래야 프론트가 `http://공인IP:8080/api/...` 같은 절대주소가 아니라 `/api/...` 상대경로로 호출합니다.
+로컬 `http://localhost` 개발:
 
-공유기 포트포워딩은 외부 80번을 서버 노트북 내부 IP의 80번으로 연결합니다.
+```dotenv
+NGINX_BIND=127.0.0.1
+NGINX_PORT=80
+NEXT_PUBLIC_API_BASE_URL=
+CORS_ALLOWED_ORIGINS=http://localhost
+FRONTEND_BASE_URL=http://localhost
+REFRESH_COOKIE_SECURE=false
+STREAM_TOKEN_COOKIE_SECURE=false
+```
+
+- `NEXT_PUBLIC_API_BASE_URL`은 빈 값으로 둡니다. 그래야 프론트가 절대주소가 아니라 `/api/...` 상대경로로 호출합니다.
+- 운영에서는 `docker-compose.prod.yml`이 nginx 호스트 포트를 닫으므로 `NGINX_BIND`·`NGINX_PORT`는 로컬에서만 쓰인다.
+- `JWT_SECRET`은 로컬·운영 모두 `openssl rand -base64 48`로 새로 만든다. `.env.example`의 placeholder는 32바이트 미만이라 그대로 두면 백엔드가 기동하지 않는다.
+- 필수값 `CORS_ALLOWED_ORIGINS`, `FRONTEND_BASE_URL`, `JWT_SECRET`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`가 비어 있으면 `docker compose` 명령이 `... is required`로 실패한다. `docker compose --env-file .env config --quiet`로 먼저 확인할 수 있다.
 
 ## 서버 재시작
 
