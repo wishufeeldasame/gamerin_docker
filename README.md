@@ -28,6 +28,39 @@ cd ~/capstone/docker
 GAMERIN_BASE_DIR=/path/to/capstone ./scripts/deploy.sh
 ```
 
+## OCI 블록 스토리지에 새 data 구성
+
+서버 전용 스크립트는 `/srv/capstone`을 기본 경로로 사용한다. OCI 장치 연결과
+ext4 포맷을 끝낸 뒤 실행한다. 아래 장치명은 예시이며 `lsblk -f`로 실제 장치를 확인한다.
+**기존 DB·업로드·임시 파일은 이전하지 않는다. 빈 볼륨이면 새 DB로 시작한다.**
+
+```bash
+cd /srv/capstone/docker
+docker compose --env-file .env ps
+# 운영에서 prod override를 사용했다면 down/up에도 같은 -f 옵션을 사용한다.
+docker compose --env-file .env down
+sudo ./scripts/server/mount-block-storage.sh /dev/oracleoci/oraclevdb
+sudo ./scripts/server/init-server-dirs-block-storage.sh
+docker compose --env-file .env up -d
+docker compose --env-file .env ps
+findmnt --mountpoint /srv/capstone/data
+```
+
+- `mount-block-storage.sh DEVICE [MOUNT_DIR]`: 기존 ext4 장치를 `data`에 마운트한다.
+  UUID와 `_netdev`로 `/etc/fstab`에 등록하고, 변경 전 fstab 사본을 남긴다.
+  Docker systemd 설정에 `RequiresMountsFor`를 추가해 재부팅 후 마운트를 요구한다.
+  마운트 실패를 숨기지 않도록 `nofail`은 사용하지 않는다. 볼륨이 없으면 부팅에 영향을 줄 수 있다.
+- `init-server-dirs-block-storage.sh`: `data`의 ext4 마운트를 확인한 뒤 기존과 같은
+  디렉터리와 업로드·임시 경로 소유권을 설정한다. Compose 수정은 필요 없다.
+- 두 스크립트는 Linux/systemd 서버용이다. 최초 마운트와 초기화 전에는 모든 실행 중인
+  컨테이너를 중지해야 한다. Docker 조회 실패 시에도 진행하지 않는다.
+- 기존 `data` 파일은 마운트 뒤 가려진다. 복사·삭제하지 않으므로 **부트 디스크 사용량은 그대로다.**
+  기존 파일 삭제는 이 스크립트 범위에 포함하지 않는다. `backups`도 부트 디스크에 남는다.
+- 볼륨에 기존 파일이 있으면 그대로 사용한다. 빈 볼륨의 `lost+found`는 정상이다.
+- 다른 경로는 마운트 시 두 번째 인수에 `<BASE_DIR>/data`를 지정하고,
+  초기화 시 `sudo env GAMERIN_BASE_DIR=<BASE_DIR> ./scripts/server/init-server-dirs-block-storage.sh`를 사용한다.
+  이후 운영 스크립트에도 같은 `GAMERIN_BASE_DIR`를 사용한다.
+
 ## 구성 파일
 
 - `docker-compose.yml`: docker compose 정의
